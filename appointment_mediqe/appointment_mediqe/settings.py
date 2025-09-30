@@ -109,25 +109,25 @@ AUTH_PASSWORD_VALIDATORS = [
 REST_FRAMEWORK = {
     # django rest framework default versioning setting
     "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.URLPathVersioning",
-    'DEFAULT_VERSION': 'v1',
-    'ALLOWED_VERSIONS': ['v1', 'v2'],
-    'VERSION_PARAM': 'version',
+    "DEFAULT_VERSION": "v1",
+    "ALLOWED_VERSIONS": ["v1", "v2"],
+    "VERSION_PARAM": "version",
 }
 
 # open api swagger using the auto schema of drf-spectacular
 REST_FRAMEWORK = {
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
-# drf spectacular settings 
+# drf spectacular settings
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'Mediqe',
-    'DESCRIPTION': 'Mediqe is a modular, scalable backend system designed for healthcare applications, featuring robust user management, appointment scheduling, medical records, doctor-patient consultations, and admin/role-based dashboards. Built with modern Python/Django best practices and ready for production deployment',
-    'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': True,
-    'SWAGGER_UI_DIST': 'SIDECAR',
-    'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
-    'REDOC_DIST': 'SIDECAR'
+    "TITLE": "Mediqe",
+    "DESCRIPTION": "Mediqe is a modular, scalable backend system designed for healthcare applications, featuring robust user management, appointment scheduling, medical records, doctor-patient consultations, and admin/role-based dashboards. Built with modern Python/Django best practices and ready for production deployment",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": True,
+    "SWAGGER_UI_DIST": "SIDECAR",
+    "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
+    "REDOC_DIST": "SIDECAR",
 }
 
 # Internationalization
@@ -148,4 +148,4 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "mediafiles")
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # define the custom user model for django custom user
-AUTH_USER_MODEL = 'accounts.User'
+AUTH_USER_MODEL = "accounts.User"

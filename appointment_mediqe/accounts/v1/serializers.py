@@ -1,19 +1,25 @@
 from rest_framework import serializers
 from ..models import User, UserProfile
 
+
 # custom user serializer to serilize data of user
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = '__all__'
-        # read only fields 
-        read_only_fields = ('group', 'permissions')
+        fields = "__all__"
+        # read only fields
+        read_only_fields = ("group", "permissions")
         # Ensure password is write-only
-        extra_kwargs = {'password' : {'write_only': True, 'style':{'input_type':'password', 'placeholder':'Password'}}}
+        extra_kwargs = {
+            "password": {
+                "write_only": True,
+                "style": {"input_type": "password", "placeholder": "Password"},
+            }
+        }
 
     # set user password in a hashed way correctly when creating new user
     def create(self, validated_data):
-        password = validated_data.pop('password', None)
+        password = validated_data.pop("password", None)
         user = User(**validated_data)
         if password:
             user.set_password(password)
@@ -22,7 +28,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     # set password of user when updating the user
     def update(self, instance, validated_data):
-        password = validated_data.pop('password', None)
+        password = validated_data.pop("password", None)
         for attribute, values in validated_data.items():
             setattr(instance, attribute, values)
         if password:
@@ -30,12 +36,13 @@ class UserSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+
 class UserProfileSerializer(serializers.ModelSerializer):
-    user = UserSerializer(required=True) 
+    user = UserSerializer(required=True)
 
     class Meta:
         model = UserProfile
-        fields = '__all__'
+        fields = "__all__"
 
     # create User profile for user for the first time (This logic is correct!)
     def create(self, validated_data):
@@ -65,5 +72,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+
 # implement the profile variable for UserSerializer class to prevenet circular class problem
-UserSerializer.profiles = UserProfileSerializer(many=True, read_only=True, source='profile') 
+UserSerializer.profiles = UserProfileSerializer(
+    many=True, read_only=True, source="profile"
+)

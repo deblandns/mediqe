@@ -20,19 +20,21 @@ class CustomUserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    # create super user in unique way with extra data and fields 
+    # create super user in unique way with extra data and fields
     def create_superuser(self, email, password, **extra_fields):
         # set the default data for super user creation
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('is_active', True)
-        extra_fields.setdefault('is_verified', True)
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
+        extra_fields.setdefault("is_active", True)
+        extra_fields.setdefault("is_verified", True)
 
         # condition to check the super user flags
-        if extra_fields.get('is_staff') is not True:
+        if extra_fields.get("is_staff") is not True:
             raise ValueError("super user must have is_staff true")
 
-        if extra_fields.get("is_superuser") is not True: 
-            raise ValueError("super user must have is_superuser true inside of it") # This error message is misleading, but we follow your text
+        if extra_fields.get("is_superuser") is not True:
+            raise ValueError(
+                "super user must have is_superuser true inside of it"
+            )  # This error message is misleading, but we follow your text
 
         return self.create_user(email, password, **extra_fields)
