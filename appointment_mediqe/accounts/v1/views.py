@@ -1,5 +1,7 @@
 from rest_framework.generics import GenericAPIView
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.response import Response
+from rest_framework import status
 from .serializers import UserSerializer, UserProfileSerializer, OtpCodeRequest
 from ..models import User, UserProfile
 from drf_spectacular.utils import extend_schema
@@ -119,5 +121,12 @@ class RequestOtpCode(GenericAPIView):
     view to request otp code from otp gateway and singing up
     """
     serializer_class = OtpCodeRequest
-
     
+    # check if the phone number is available or not
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        phone = serializer.validated_data["phone"]
+        if User.objects.filter(phone=phone).exists():
+            return Response({"message": "Phone number already exists"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"message": "Phone number is available"}, status=status.HTTP_200_OK)
