@@ -10,31 +10,29 @@ class CustomUserManager(BaseUserManager):
     """
 
     # set user email and password for each user creation in default
-    def create_user(self, email, password=None, **extra_fields):
-        if not email:
-            raise ValueError("the email field is necessary")
-
-        email = self.normalize_email(email)
-        user = self.model(email=email, **extra_fields)
-        user.set_password(password)
+    def create_user(self, phone, password=None, **extra_fields):
+        if not phone:
+            raise ValueError("the phone field is necessary")
+        user = self.model(phone=phone, **extra_fields)
+        if password:
+            user.set_password(password)
+        else:
+            user.set_unusable_password() # for otp codes
         user.save(using=self._db)
         return user
 
-    # create super user in unique way with extra data and fields
-    def create_superuser(self, email, password, **extra_fields):
-        # set the default data for super user creation
+    # overwrite the createsuper user with desire data
+    def create_superuser(self, phone, password=None, **extra_fields):
+        # set default flags for superuser
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
         extra_fields.setdefault("is_active", True)
         extra_fields.setdefault("is_verified", True)
 
-        # condition to check the super user flags
         if extra_fields.get("is_staff") is not True:
-            raise ValueError("super user must have is_staff true")
+            raise ValueError("Superuser must have is_staff=True")
 
         if extra_fields.get("is_superuser") is not True:
-            raise ValueError(
-                "super user must have is_superuser true inside of it"
-            )  # This error message is misleading, but we follow your text
+            raise ValueError("Superuser must have is_superuser=True")
 
-        return self.create_user(email, password, **extra_fields)
+        return self.create_user(phone, password, **extra_fields)

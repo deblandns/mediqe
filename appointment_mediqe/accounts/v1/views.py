@@ -1,6 +1,6 @@
-from django.shortcuts import render
+from rest_framework.generics import GenericAPIView
 from rest_framework.viewsets import ModelViewSet
-from .serializers import UserSerializer, UserProfileSerializer
+from .serializers import UserSerializer, UserProfileSerializer, OtpCodeRequest
 from ..models import User, UserProfile
 from drf_spectacular.utils import extend_schema
 
@@ -111,3 +111,13 @@ class UserProfileViewSet(ModelViewSet):
     )
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)
+
+
+# class for getting the otp verification code and save it to ram
+class RequestOtpCode(GenericAPIView):
+    """
+    view to request otp code from otp gateway and singing up
+    """
+    serializer_class = OtpCodeRequest
+
+    

@@ -1,16 +1,12 @@
 import uuid
+from django.core.validators import RegexValidator
 from django.db import models
-from django.contrib.auth.models import (
-    AbstractBaseUser,
-    PermissionsMixin,
-    Permission,
-    Group,
-)
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from .managers import CustomUserManager
 
 
 # extended user class to extend user data in user model of django
-class User(AbstractBaseUser):
+class User(AbstractBaseUser, PermissionsMixin):
     # important fields
     id = models.UUIDField(
         primary_key=True, default=uuid.uuid4, null=False, blank=False, editable=False
@@ -19,10 +15,10 @@ class User(AbstractBaseUser):
         max_length=120, unique=True, null=True, blank=True, verbose_name="user name"
     )
     email = models.EmailField(
-        max_length=300, unique=True, null=False, blank=False, verbose_name="email"
+        max_length=150, unique=True, null=True, blank=True, verbose_name="email"
     )
     password = models.CharField(
-        max_length=600, null=False, blank=False, verbose_name="password"
+        max_length=128, verbose_name="password"
     )  # will be hashed password
 
     # standard fields
@@ -67,9 +63,7 @@ class User(AbstractBaseUser):
     date_of_birth = models.DateField(
         null=True, blank=True, verbose_name="date of birth"
     )
-    phone = models.CharField(
-        max_length=15, null=False, blank=False, verbose_name="phone number"
-    )
+    phone = models.CharField(unique=True, max_length=15, null=False, blank=False, verbose_name="phone number", validators=[RegexValidator(regex=r'^(\+98|0)?9\d{9}$', message="Please enter a valid Iranian mobile number (e.g., 09123456789 or +989123456789)")])
     address = models.CharField(
         max_length=150, null=True, blank=True, verbose_name="user address"
     )
@@ -93,11 +87,11 @@ class User(AbstractBaseUser):
     )
 
     objects = CustomUserManager()
-    USERNAME_FIELD = "email"
+    USERNAME_FIELD = "phone"
     REQUIRED_FIELDS = []  # these are fields that are required
 
     def __str__(self):
-        return f"{self.email}"
+        return f"{self.phone}"
 
 
 class UserProfile(models.Model):
