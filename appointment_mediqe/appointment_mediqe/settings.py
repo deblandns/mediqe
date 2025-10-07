@@ -140,15 +140,6 @@ REST_FRAMEWORK = {
     },
 }
 
-
-# # open api swagger using the auto schema of drf-spectacular
-# REST_FRAMEWORK = {
-#     "DEFAULT_AUTHENTICATION_CLASSES": [
-#         "rest_framework_simplejwt.authentication.JWTAuthentication",
-#     ],
-#     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-# }
-
 # drf spectacular settings
 SPECTACULAR_SETTINGS = {
     "TITLE": "Mediqe",
