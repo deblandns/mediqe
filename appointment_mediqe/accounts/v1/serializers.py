@@ -94,6 +94,22 @@ class OtpCodeRequest(serializers.Serializer):
         ],
     )
 
+# class to serialize and validate the otp code input from user
+class OtpCodeVerify(serializers.Serializer):
+    """
+    this serializer will vaidate the otp code from source and check if its okay to verify the user
+    """
+    phone = serializers.CharField(
+        max_length=15,
+        validators=[
+            RegexValidator(
+                regex=r"^(\+98|0)?9\d{9}$",
+                message="Please enter a valid Iranian mobile number (e.g., 09123456789 or +989123456789)",
+            )
+        ],
+    )
+    otp = serializers.CharField(max_length=6, min_length=6)
+
 
 # implement the profile variable for UserSerializer class to prevenet circular class problem
 UserSerializer.profiles = UserProfileSerializer(

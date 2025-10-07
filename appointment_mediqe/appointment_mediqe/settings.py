@@ -119,20 +119,35 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # django rest framework settings
 REST_FRAMEWORK = {
-    # django rest framework default versioning setting
     "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.URLPathVersioning",
     "DEFAULT_VERSION": "v1",
     "ALLOWED_VERSIONS": ["v1", "v2"],
     "VERSION_PARAM": "version",
-}
-
-# open api swagger using the auto schema of drf-spectacular
-REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+        "rest_framework.throttling.ScopedRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "30/m",
+        "user": "60/m",
+        "otp": "10/m",
+        "otp_verify": "5/m",
+    },
 }
+
+
+# # open api swagger using the auto schema of drf-spectacular
+# REST_FRAMEWORK = {
+#     "DEFAULT_AUTHENTICATION_CLASSES": [
+#         "rest_framework_simplejwt.authentication.JWTAuthentication",
+#     ],
+#     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+# }
 
 # drf spectacular settings
 SPECTACULAR_SETTINGS = {
