@@ -6,7 +6,12 @@ from ..models import User, UserProfile
 # custom user serializer to serilize data of user
 class UserSerializer(serializers.ModelSerializer):
     # make the password for otp based
-    password = serializers.CharField(write_only=True, required=False, allow_blank=True, style={"input_type": "password", "placeholder": "Password"})
+    password = serializers.CharField(
+        write_only=True,
+        required=False,
+        allow_blank=True,
+        style={"input_type": "password", "placeholder": "Password"},
+    )
 
     class Meta:
         model = User
@@ -21,7 +26,7 @@ class UserSerializer(serializers.ModelSerializer):
         if password:
             user.set_password(password)
         else:
-            user.set_unusable_password() # otp only accounts
+            user.set_unusable_password()  # otp only accounts
         user.save()
         return user
 
@@ -34,7 +39,6 @@ class UserSerializer(serializers.ModelSerializer):
             instance.set_password(password)
         instance.save()
         return instance
-
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -53,7 +57,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         if password:
             user.set_password(password)
         else:
-            user.set_unusable_password() # only otp accounts
+            user.set_unusable_password()  # only otp accounts
         user.save()
         profile = UserProfile.objects.create(user=user, **validated_data)
         return profile
@@ -73,21 +77,22 @@ class UserProfileSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+
 # class to serialize and validate the number input from user
 class OtpCodeRequest(serializers.Serializer):
     """
     this serializer will check if the number is valid or not then send it as json code
     """
+
     phone = serializers.CharField(
         max_length=15,
         validators=[
             RegexValidator(
-                regex=r'^(\+98|0)?9\d{9}$',
-                message="Please enter a valid Iranian mobile number (e.g., 09123456789 or +989123456789)"
+                regex=r"^(\+98|0)?9\d{9}$",
+                message="Please enter a valid Iranian mobile number (e.g., 09123456789 or +989123456789)",
             )
-        ]
+        ],
     )
-
 
 
 # implement the profile variable for UserSerializer class to prevenet circular class problem

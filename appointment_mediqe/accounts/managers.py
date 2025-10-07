@@ -17,7 +17,7 @@ class CustomUserManager(BaseUserManager):
         if password:
             user.set_password(password)
         else:
-            user.set_unusable_password() # for otp codes
+            user.set_unusable_password()  # for otp codes
         user.save(using=self._db)
         return user
 

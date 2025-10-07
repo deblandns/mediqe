@@ -8,8 +8,8 @@ routers.register("users", UserViewSet, basename="users")
 routers.register("profiles", UserProfileViewSet, basename="profiles")
 
 urlpatterns = [
-    path('token/', jwt_views.TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
-    path('otp/request/', RequestOtpCode.as_view(), name='otp_request'),
-    path("", include(routers.urls))
+    path("token/", jwt_views.TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("token/refresh/", jwt_views.TokenRefreshView.as_view(), name="token_refresh"),
+    path("otp/request/", RequestOtpCode.as_view(), name="otp_request"),
+    path("", include(routers.urls)),
 ]
