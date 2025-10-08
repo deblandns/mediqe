@@ -1,13 +1,15 @@
+import random
 from django.core.cache import cache
-from django.contrib.auth.hashers import check_password
+from django.contrib.auth.hashers import check_password, make_password
 from rest_framework.generics import GenericAPIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.throttling import ScopedRateThrottle
-from ..utils import otp_generator
+from accounts.tasks import send_otp_code
 from .serializers import UserSerializer, UserProfileSerializer, OtpCodeRequest, OtpCodeVerify
 from ..models import User, UserProfile
+from ..utils import get_tokens_for_user
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 
 
@@ -160,11 +162,13 @@ class RequestOtpCode(GenericAPIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             else:
+                otp = str(random.randint(100000, 999999))
+                send_otp_code.delay(phone, otp)
                 # set the cache data into a redis database
                 cache.set(
                     f"otp:{phone}",
                     {
-                        "otp": otp_generator(),
+                        "otp": make_password(otp),
                         "attempts": 0,
                     },
                     timeout=300,
@@ -183,6 +187,15 @@ class VerifyOtpRequest(GenericAPIView):
     """
     view to verify otp code from otp gateway and singing up
     """
+    # Flow:
+    # 1. Client posts phone + otp to this endpoint.
+    # 2. If OTP matches, we delete the cached OTP, create the User if
+    #    not present, mark them as verified, and return JWT access +
+    #    refresh tokens using `get_tokens_for_user` from
+    #    `accounts.utils`.
+    # 3. If too many failed attempts or OTP expired, return 400 with
+    #    an appropriate message.
+
     # scoped rate throttling for rate limiting request for singup
     throttle_scope = 'otp_verify'
     throttle_classes = [ScopedRateThrottle]
@@ -221,7 +234,7 @@ class VerifyOtpRequest(GenericAPIView):
                 cache.set(f"otp:{phone}", cached_otp_data, timeout=300)
 
                 # If too many failed attempts
-                if cached_otp_data["attempts"] >= 5:
+                if cached_otp_data["attempts"] >= 3:
                     cache.delete(f"otp:{phone}")
                     return Response(
                         {"message": "Too many attempts. Please request a new OTP."},
@@ -235,8 +248,23 @@ class VerifyOtpRequest(GenericAPIView):
 
             # ✅ If OTP is correct
             cache.delete(f"otp:{phone}")
+
+            # Create the user if it doesn't exist yet. We use the custom
+            user, created = User.objects.get_or_create(phone=phone)
+            if created:
+                user.set_unusable_password() # newly created OTP-only user should have unusable password
+            user.is_verified = False
+            user.save()
+
+            # issue JWT tokens for this user (access + refresh)
+            tokens = get_tokens_for_user(user)
+
             return Response(
-                {"message": "OTP verified successfully"},
+                {
+                    "message": "OTP verified successfully",
+                    "user": {"id": str(user.id), "phone": user.phone},
+                    "tokens": tokens,
+                },
                 status=status.HTTP_200_OK,
             )
             

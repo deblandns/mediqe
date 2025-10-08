@@ -129,6 +129,16 @@ or
 python manage.py test
 ```
 
+```
+run celery on windows
+celery -A appointment_mediqe worker -l info --pool=solo 
+
+```
+```
+run celery on linux and production using 
+celery -A appointment_mediqe worker -l info --concurrency=4
+```
+
 ---
 
 ## 🤝 Contributions

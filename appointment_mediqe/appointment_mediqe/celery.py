@@ -7,4 +7,3 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'appointment_mediqe.settings')
 app = Celery('appointment_mediqe')
 app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks()
-

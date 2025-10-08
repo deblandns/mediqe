@@ -130,13 +130,13 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_CLASSES": [
         "rest_framework.throttling.AnonRateThrottle",
         "rest_framework.throttling.UserRateThrottle",
-        "rest_framework.throttling.ScopedRateThrottle",
+        # "rest_framework.throttling.ScopedRateThrottle",
     ],
     "DEFAULT_THROTTLE_RATES": {
         "anon": "30/m",
         "user": "60/m",
-        "otp": "10/m",
-        "otp_verify": "5/m",
+        "otp": "1/m",
+        "otp_verify": "3/m",
     },
 }
 
@@ -162,6 +162,13 @@ SIMPLE_JWT = {
     "SIGNING_KEY": SECRET_KEY,
 }
 
+
+# celery settings for config
+CELERY_BROKER_URL = "redis://127.0.0.1:6379/1"
+CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/1"
+CELERY_RESULT_EXPIRES = 60  # results auto-expire
+CELERY_IGNORE_RESULT = True 
+CELERY_RESULT_BACKEND = None
 
 # Internationalization
 LANGUAGE_CODE = "en-us"

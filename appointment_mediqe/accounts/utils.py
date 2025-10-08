@@ -1,12 +1,8 @@
-import random
-from django.contrib.auth.hashers import make_password
+from rest_framework_simplejwt.tokens import RefreshToken 
 
-
-# function to generate otp
-def otp_generator():
-    try:
-        otp = str(random.randint(100000, 999999))
-        print(otp)
-        return make_password(otp)
-    except Exception as e:
-        return None
+def get_tokens_for_user(user):
+    refresh = RefreshToken.for_user(user)
+    return {
+        'refresh': str(refresh),
+        'access': str(refresh.access_token),
+    }
