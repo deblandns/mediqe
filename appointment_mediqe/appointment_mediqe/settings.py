@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "organizations.apps.OrganizationsConfig",
     # external apps
     "rest_framework",
+    "rest_framework_simplejwt.token_blacklist",
     "drf_spectacular",
     "drf_spectacular_sidecar",
 ]
@@ -154,12 +155,15 @@ SPECTACULAR_SETTINGS = {
 # setting of simple jwt
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
-    "REFRESH_TOKEN_LIFETIME": timedelta(
-        days=30
-    ),  # refresh tokens will expire after 30 days
-    "UPDATE_LAST_LOGIN": True,
-    "ALGORITHM": "HS256",
-    "SIGNING_KEY": SECRET_KEY,
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
+    "UPDATE_LAST_LOGIN": True, # the last login timestamp will be updated on token refresh
+    "ALGORITHM": "HS256", # the refresh token algorithm
+    "SIGNING_KEY": SECRET_KEY, # the signing key for the tokens
+    "ROTATE_REFRESH_TOKENS": True, # rotate refresh tokens for better security
+    "BLACKLIST_AFTER_ROTATION": True, # blacklist the old one after rotation
+    "AUTH_HEADER_TYPES": ("Bearer",), # auth header types
+    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),  # access token class
+    "TOKEN_BLACKLIST_ENABLED": True, # enable token blacklisting
 }
 
 
