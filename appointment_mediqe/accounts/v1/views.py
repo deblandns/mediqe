@@ -120,16 +120,13 @@ class UserProfileViewSet(ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)
 
-
-# class for getting the otp verification code and save it to ram
+# class for getting the otp verification code and save it to ram 
 class RequestOtpCode(GenericAPIView):
     """
-    view to request otp code from otp gateway and singing up
+    View to request OTP code from OTP gateway for both registration and login.
     """
-    # scoped rate throttling for rate limiting request for singup
     throttle_scope = 'otp'
     throttle_classes = [ScopedRateThrottle]
-    
     
     serializer_class = OtpCodeRequest
 
@@ -138,68 +135,60 @@ class RequestOtpCode(GenericAPIView):
         request=OtpCodeRequest,
         responses={
             200: OpenApiResponse(description="Otp Created Successfully"),
-            400: OpenApiResponse(description="Phone number already exists or Otp code already sent"),
+            400: OpenApiResponse(description="Otp code already sent"),
             500: OpenApiResponse(description="Failed to generate otp code"),
         },
         description="Request an OTP code for a given phone number.",
     )   
-    # check if the phone number is available or not and do the rest logic of otp code request
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         phone = serializer.validated_data["phone"]
-        if User.objects.filter(
-            phone=phone
-        ).exists():  # if user is available inside our database
+
+        # If an OTP is already present, don't re-send
+        if cache.get(f"otp:{phone}"):
             return Response(
-                {"message": "Phone number already exists"},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"message": "An OTP has already been sent. Please wait."},
+                status=status.HTTP_400_BAD_REQUEST
             )
+
         try:
-            if cache.get(f"otp:{phone}"):
+            # generate OTP and hash it
+            otp = str(random.randint(100000, 999999))
+            added = cache.add(
+                f"otp:{phone}",
+                {"otp": make_password(otp), "attempts": 0},
+                timeout=300,  # 5 minutes
+            )
+            if not added:
                 return Response(
-                    {"message": "Otp code already sent"},
-                    status=status.HTTP_400_BAD_REQUEST,
+                    {"message": "An OTP has already been sent. Please wait."},
+                    status=status.HTTP_400_BAD_REQUEST
                 )
-            else:
-                otp = str(random.randint(100000, 999999))
-                send_otp_code.delay(phone, otp)
-                # set the cache data into a redis database
-                cache.set(
-                    f"otp:{phone}",
-                    {
-                        "otp": make_password(otp),
-                        "attempts": 0,
-                    },
-                    timeout=300,
-                )  # 5 minutes
+            
+            # send OTP async
+            send_otp_code.delay(phone, otp)
+
+            # ✅ Unified response for new and existing users to avoid enumeration
             return Response(
-                {"message": "Otp Created Successfully"}, status=status.HTTP_200_OK
+                {"message": "If the phone is reachable, an OTP has been sent."},
+                status=status.HTTP_200_OK
             )
         except Exception as e:
             return Response(
                 {"message": "Failed to generate otp code"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
 
 # otp verification class
 class VerifyOtpRequest(GenericAPIView):
     """
-    view to verify otp code from otp gateway and singing up
+    View to verify OTP code from OTP gateway.
+    Handles both login and registration.
     """
-    # Flow:
-    # 1. Client posts phone + otp to this endpoint.
-    # 2. If OTP matches, we delete the cached OTP, create the User if
-    #    not present, mark them as verified, and return JWT access +
-    #    refresh tokens using `get_tokens_for_user` from
-    #    `accounts.utils`.
-    # 3. If too many failed attempts or OTP expired, return 400 with
-    #    an appropriate message.
-
-    # scoped rate throttling for rate limiting request for singup
     throttle_scope = 'otp_verify'
     throttle_classes = [ScopedRateThrottle]
-    
     
     serializer_class = OtpCodeVerify
 
@@ -213,7 +202,6 @@ class VerifyOtpRequest(GenericAPIView):
         },
         description="Verify an OTP code for a given phone number.",
     )   
-    # check if the phone number is available or not and do the rest logic of otp code verification
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -227,13 +215,11 @@ class VerifyOtpRequest(GenericAPIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            # Check if OTP is correct using Django's hasher
+            # Check if OTP is correct
             if not check_password(otp, cached_otp_data["otp"]):
-                # Increment failed attempt count
                 cached_otp_data["attempts"] += 1
                 cache.set(f"otp:{phone}", cached_otp_data, timeout=300)
 
-                # If too many failed attempts
                 if cached_otp_data["attempts"] >= 3:
                     cache.delete(f"otp:{phone}")
                     return Response(
@@ -246,14 +232,15 @@ class VerifyOtpRequest(GenericAPIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            # ✅ If OTP is correct
+            # ✅ If OTP is correct, delete cache
             cache.delete(f"otp:{phone}")
 
-            # Create the user if it doesn't exist yet. We use the custom
+            # ✅ Create user only if it does not exist (first-time registration)
             user, created = User.objects.get_or_create(phone=phone)
             if created:
-                user.set_unusable_password() # newly created OTP-only user should have unusable password
-            user.is_verified = False
+                user.set_unusable_password()  # OTP-only account
+
+            user.is_verified = True
             user.save()
 
             # issue JWT tokens for this user (access + refresh)

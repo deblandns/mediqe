@@ -14,6 +14,19 @@ class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(
         max_length=120, unique=True, null=True, blank=True, verbose_name="user name"
     )
+    phone = models.CharField(
+        unique=True,
+        max_length=15,
+        null=False,
+        blank=False,
+        verbose_name="phone number",
+        validators=[
+            RegexValidator(
+                regex=r"^(\+98|0)?9\d{9}$",
+                message="Please enter a valid Iranian mobile number (e.g., 09123456789 or +989123456789)",
+            )
+        ],
+    )
     email = models.EmailField(
         max_length=150, unique=True, null=True, blank=True, verbose_name="email"
     )
@@ -62,19 +75,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     date_of_birth = models.DateField(
         null=True, blank=True, verbose_name="date of birth"
-    )
-    phone = models.CharField(
-        unique=True,
-        max_length=15,
-        null=False,
-        blank=False,
-        verbose_name="phone number",
-        validators=[
-            RegexValidator(
-                regex=r"^(\+98|0)?9\d{9}$",
-                message="Please enter a valid Iranian mobile number (e.g., 09123456789 or +989123456789)",
-            )
-        ],
     )
     address = models.CharField(
         max_length=150, null=True, blank=True, verbose_name="user address"
