@@ -4,6 +4,8 @@ from django.contrib.auth.hashers import check_password, make_password
 from rest_framework.generics import GenericAPIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
+from rest_framework.decorators import action
 from rest_framework import status
 from rest_framework.throttling import ScopedRateThrottle
 from accounts.tasks import send_otp_code
@@ -17,6 +19,19 @@ from drf_spectacular.utils import extend_schema, OpenApiResponse
 class UserViewSet(ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+    def get_permissions(self):
+        permission_map = {
+        'list': [IsAdminUser],
+        'create': [IsAdminUser],
+        'retrieve': [IsAdminUser],
+        'update': [IsAdminUser],
+        'partial_update': [IsAdminUser],
+        'destroy': [IsAdminUser],
+        'me': [IsAuthenticated],
+        }
+        self.permission_classes = permission_map.get(self.action, [AllowAny])
+        return super().get_permissions()
 
     @extend_schema(
         summary="List all users",
@@ -64,6 +79,16 @@ class UserViewSet(ModelViewSet):
     @extend_schema(summary="Delete a user", description="Delete a user by ID.")
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)
+
+    @extend_schema(
+    summary="Retrieve current authenticated user",
+    responses=UserSerializer,
+    description="Return details of the currently authenticated user based on JWT token."
+    )       
+    @action(detail=False, methods=['get'], url_path='me')
+    def me(self, request):
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data)
 
 
 # UserPofiles View to get http request and handle it
