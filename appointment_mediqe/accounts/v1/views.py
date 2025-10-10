@@ -95,6 +95,7 @@ class UserViewSet(ModelViewSet):
 class UserProfileViewSet(ModelViewSet):
     queryset = UserProfile.objects.all()
     serializer_class = UserProfileSerializer
+    permission_classes = [IsAdminUser] # just for admin users its possible to do crud on UserProfileViewSet
 
     @extend_schema(
         summary="List all user profiles",
@@ -102,6 +103,7 @@ class UserProfileViewSet(ModelViewSet):
         description="Retrieve a list of all user profiles.",
     )
     def list(self, request, *args, **kwargs):
+
         return super().list(request, *args, **kwargs)
 
     @extend_schema(
