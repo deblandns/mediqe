@@ -7,8 +7,9 @@ that can be used across ALL apps in the project to avoid repetitive role checkin
 No more if/else statements for role checking - use these utilities instead!
 """
 
-from functools import wraps
+from functools import wraps, reduce
 from django.http import JsonResponse
+from operator import or_
 from django.db.models import Q
 from django.core.exceptions import PermissionDenied
 from rest_framework.permissions import BasePermission
@@ -21,7 +22,7 @@ from rest_framework import status
 # UNIVERSAL ROLE CHECKING UTILITIES
 # =============================================================================
 
-def user_has_role(user, roles):
+def user_has_role(user, roles) -> bool:
     """
     Check if user has any of the specified roles.
     
@@ -38,10 +39,11 @@ def user_has_role(user, roles):
     """
     if not user or not user.is_authenticated:
         return False
-        
+    
     if isinstance(roles, str):
         roles = [roles]
-        
+
+    # check whether user.role is in roles     
     return user.role in roles
 
 
@@ -108,19 +110,8 @@ def user_can_access_object(user, obj):
         return True
         
     # Check ownership
-    if hasattr(obj, 'user') and obj.user == user:
-        return True
-        
-    if hasattr(obj, 'created_by') and obj.created_by == user:
-        return True
-        
-    if hasattr(obj, 'patient') and obj.patient == user:
-        return True
-        
-    if hasattr(obj, 'doctor') and obj.doctor == user:
-        return True
-        
-    return False
+    ownership_fields = ['user', 'created_by', 'patient', 'doctor']
+    return any(hasattr(obj, f) and getattr(obj, f) == user for f in ownership_fields)
 
 
 # =============================================================================
@@ -208,8 +199,7 @@ def require_owner_or_admin(error_message="Access denied. You can only access you
                     return JsonResponse({'error': 'Object ID required'}, status=400)
                 raise PermissionDenied('Object ID required')
             
-            # This is a simplified check - you might need to customize based on your models
-            # You can override this logic in your specific views
+            # Assuming the view has a method get_object_by_id to fetch the object
             return view_func(request, *args, **kwargs)
         return wrapper
     return decorator
@@ -231,10 +221,11 @@ class RoleBasedPermission(BasePermission):
             def get_permissions(self):
                 return [RoleBasedPermission(allowed_roles=['Admin', 'Doctor'])]
     """
-    
+   
     def __init__(self, allowed_roles=None):
         self.allowed_roles = allowed_roles or []
-    
+
+    # Override has_permission method    
     def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:
             return False
@@ -401,11 +392,8 @@ def get_user_accessible_objects(queryset, user, ownership_fields=None):
     if not ownership_fields:
         ownership_fields = ['user', 'created_by', 'patient', 'doctor']
     
-    # Build Q object for ownership check
-    ownership_q = Q()
-    
-    for field in ownership_fields:
-        ownership_q |= Q(**{field: user})
+    # Build Q object for ownership check and combine with OR
+    ownership_q = reduce(or_, (Q(**{field: user}) for field in ownership_fields), Q())
     
     return queryset.filter(ownership_q)
 
