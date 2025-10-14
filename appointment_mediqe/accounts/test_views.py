@@ -6,6 +6,8 @@ from .models import UserProfile
 
 User = get_user_model()
 
+# warning the test inputs are change from the version before may the authentication doesn`t work using this test case
+
 # --- Mock Data ---
 
 USER_1_DATA = {

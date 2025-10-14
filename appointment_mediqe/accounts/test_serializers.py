@@ -3,6 +3,8 @@ from django.contrib.auth.hashers import check_password
 from .models import User, UserProfile
 from .v1.serializers import UserSerializer, UserProfileSerializer
 
+# warning the test inputs are change from the version before may the authentication doesn`t work using this test case
+
 # Mock data for testing
 USER_DATA = {
     "email": "test@example.com",

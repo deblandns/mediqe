@@ -13,9 +13,7 @@ from operator import or_
 from django.db.models import Q
 from django.core.exceptions import PermissionDenied
 from rest_framework.permissions import BasePermission
-from rest_framework.exceptions import PermissionDenied as DRFPermissionDenied
 from rest_framework.response import Response
-from rest_framework import status
 
 
 # =============================================================================

@@ -10,28 +10,30 @@ from rest_framework import status
 from rest_framework.throttling import ScopedRateThrottle
 from accounts.tasks import send_otp_code
 from .serializers import UserSerializer, UserProfileSerializer, OtpCodeRequest, OtpCodeVerify
+from drf_spectacular.utils import extend_schema, OpenApiResponse
 from ..models import User, UserProfile
 from ..utils import get_tokens_for_user
-from drf_spectacular.utils import extend_schema, OpenApiResponse
+from ..permissions import UniversalPermissionMixin, AdminOnlyPermission
 
 
 # User View to get http request and handle it
-class UserViewSet(ModelViewSet):
+class UserViewSet(UniversalPermissionMixin, ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
+    # get the permissions of the user to check wheter is user can access or not
     def get_permissions(self):
-        permission_map = {
-        'list': [IsAdminUser],
-        'create': [IsAdminUser],
-        'retrieve': [IsAdminUser],
-        'update': [IsAdminUser],
-        'partial_update': [IsAdminUser],
-        'destroy': [IsAdminUser],
-        'me': [IsAuthenticated],
-        }
-        self.permission_classes = permission_map.get(self.action, [AllowAny])
-        return super().get_permissions()
+        if self.action == 'me':
+            return [IsAuthenticated()]  # direct DRF permission
+
+        return self.get_universal_permissions({
+        'list': ['Admin'],
+        'create': ['Admin'],
+        'retrieve': ['Admin'],
+        'update': ['Admin'],
+        'partial_update': ['Admin'],
+        'destroy': ['Admin'],
+    })
 
     @extend_schema(
         summary="List all users",
@@ -95,7 +97,7 @@ class UserViewSet(ModelViewSet):
 class UserProfileViewSet(ModelViewSet):
     queryset = UserProfile.objects.all()
     serializer_class = UserProfileSerializer
-    permission_classes = [IsAdminUser] # just for admin users its possible to do crud on UserProfileViewSet
+    permission_classes = [AdminOnlyPermission] # just for admin users its possible to do crud on UserProfileViewSet
 
     @extend_schema(
         summary="List all user profiles",
@@ -103,7 +105,6 @@ class UserProfileViewSet(ModelViewSet):
         description="Retrieve a list of all user profiles.",
     )
     def list(self, request, *args, **kwargs):
-
         return super().list(request, *args, **kwargs)
 
     @extend_schema(
