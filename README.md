@@ -131,7 +131,7 @@ python manage.py test
 
 ```
 run celery on windows
-celery -A appointment_mediqe worker -l info --pool=solo 
+celery -A appointment_mediqe worker -l info --pool=solo
 
 ```
 ```

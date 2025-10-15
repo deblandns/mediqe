@@ -79,7 +79,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 
 # class to serialize and validate the number input from user
-class OtpCodeRequest(serializers.Serializer):
+class OtpCodeRequestSerializer(serializers.Serializer):
     """
     this serializer will check if the number is valid or not then send it as json code
     """
@@ -95,7 +95,7 @@ class OtpCodeRequest(serializers.Serializer):
     )
 
 # class to serialize and validate the otp code input from user
-class OtpCodeVerify(serializers.Serializer):
+class OtpCodeVerifySerializer(serializers.Serializer):
     """
     this serializer will vaidate the otp code from source and check if its okay to verify the user
     """

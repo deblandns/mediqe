@@ -9,7 +9,7 @@ from rest_framework.decorators import action
 from rest_framework import status
 from rest_framework.throttling import ScopedRateThrottle
 from accounts.tasks import send_otp_code
-from .serializers import UserSerializer, UserProfileSerializer, OtpCodeRequest, OtpCodeVerify
+from .serializers import UserSerializer, UserProfileSerializer, OtpCodeRequestSerializer, OtpCodeVerifySerializer
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from ..models import User, UserProfile
 from ..utils import get_tokens_for_user
@@ -156,11 +156,11 @@ class RequestOtpCode(GenericAPIView):
     throttle_scope = 'otp'
     throttle_classes = [ScopedRateThrottle]
     
-    serializer_class = OtpCodeRequest
+    serializer_class = OtpCodeRequestSerializer
 
     @extend_schema(
         summary="Request OTP code",
-        request=OtpCodeRequest,
+        request=OtpCodeRequestSerializer,
         responses={
             200: OpenApiResponse(description="Otp Created Successfully"),
             400: OpenApiResponse(description="Otp code already sent"),
@@ -218,11 +218,11 @@ class VerifyOtpRequest(GenericAPIView):
     throttle_scope = 'otp_verify'
     throttle_classes = [ScopedRateThrottle]
     
-    serializer_class = OtpCodeVerify
+    serializer_class = OtpCodeVerifySerializer
 
     @extend_schema(
         summary="Verify OTP code",
-        request=OtpCodeVerify,
+        request=OtpCodeVerifySerializer,
         responses={
             200: OpenApiResponse(description="Otp Verified Successfully"),
             400: OpenApiResponse(description="Invalid OTP or Phone number"),
